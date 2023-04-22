@@ -7,10 +7,16 @@ import (
 )
 
 func TestBigSend(t *testing.T) {
-	client := New(":9991")
-	server := New(":9998")
+	client := New("localhost:9971", 3)
+	server := New("localhost:9972", 3)
 	sync := make(chan error)
-	size := 16000
+	size := 8000000000
+
+	go func() {
+		_, err := server.Recv(size)
+		sync <- err
+		close(sync)
+	}()
 
 	msg := make([]byte, size)
 	n, err := rand.Read(msg)
@@ -21,14 +27,10 @@ func TestBigSend(t *testing.T) {
 		t.Error(fmt.Errorf("wrong payload size"))
 	}
 
-	go func() {
-		_, err := server.Recv(size)
-		sync <- err
-	}()
-
-	err = client.Send(msg, "localhost:9998")
+	err = client.Send(msg, "localhost:9972")
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
 	for err := range sync {

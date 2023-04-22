@@ -3,20 +3,31 @@ package gonet
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 type Node struct {
-	Addr string
+	Addr        string
+	ConnRetries int // number of 'Dial()' retries
 }
 
-func New(addr string) *Node {
+func New(addr string, retries int) *Node {
 	return &Node{
-		Addr: addr,
+		Addr:        addr,
+		ConnRetries: retries,
 	}
 }
 
 func (n *Node) Send(data []byte, addr string) error {
-	conn, err := net.Dial("tcp", addr)
+	var conn net.Conn
+	var err error
+	for i := 0; i < n.ConnRetries; i++ {
+		conn, err = net.Dial("tcp", addr)
+		if err == nil {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
 	if err != nil {
 		return err
 	}
@@ -50,13 +61,17 @@ func (node *Node) Recv(size int) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	n, err := conn.Read(data)
-	if err != nil {
-		return nil, err
+	read := 0
+	for read < size {
+		n, err := conn.Read(data)
+		if err != nil {
+			return nil, err
+		}
+		read += n
 	}
 
-	if n != size {
-		return nil, fmt.Errorf("bytes expected: %v, read: %v", size, n)
+	if read != size {
+		return nil, fmt.Errorf("bytes expected: %v, read: %v", size, read)
 	}
 
 	return data, nil
