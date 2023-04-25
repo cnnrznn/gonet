@@ -6,19 +6,24 @@ import (
 	"time"
 )
 
-type Node struct {
+type Node interface {
+	Send(data []byte, addr string) error
+	Recv(size int) ([]byte, error)
+}
+
+type TcpNode struct {
 	Addr        string
 	ConnRetries int // number of 'Dial()' retries
 }
 
-func New(addr string, retries int) *Node {
-	return &Node{
+func New(addr string, retries int) *TcpNode {
+	return &TcpNode{
 		Addr:        addr,
 		ConnRetries: retries,
 	}
 }
 
-func (n *Node) Send(data []byte, addr string) error {
+func (n *TcpNode) Send(data []byte, addr string) error {
 	var conn net.Conn
 	var err error
 	for i := 0; i < n.ConnRetries; i++ {
@@ -46,7 +51,7 @@ func (n *Node) Send(data []byte, addr string) error {
 	return nil
 }
 
-func (node *Node) Recv(size int) ([]byte, error) {
+func (node *TcpNode) Recv(size int) ([]byte, error) {
 	data := make([]byte, size)
 
 	l, err := net.Listen("tcp", node.Addr)
