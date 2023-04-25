@@ -13,7 +13,7 @@ func TestBigSend(t *testing.T) {
 	size := 8000000000
 
 	go func() {
-		_, err := server.Recv(size)
+		_, err := server.Recv(client.Addr, size)
 		sync <- err
 		close(sync)
 	}()
@@ -27,7 +27,7 @@ func TestBigSend(t *testing.T) {
 		t.Error(fmt.Errorf("wrong payload size"))
 	}
 
-	err = client.Send(msg, "localhost:9972")
+	err = client.Send(msg, server.Addr)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

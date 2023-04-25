@@ -8,7 +8,7 @@ import (
 
 type Node interface {
 	Send(data []byte, addr string) error
-	Recv(size int) ([]byte, error)
+	Recv(addr string, size int) ([]byte, error)
 }
 
 type TcpNode struct {
@@ -51,7 +51,7 @@ func (n *TcpNode) Send(data []byte, addr string) error {
 	return nil
 }
 
-func (node *TcpNode) Recv(size int) ([]byte, error) {
+func (node *TcpNode) Recv(addr string, size int) ([]byte, error) {
 	data := make([]byte, size)
 
 	l, err := net.Listen("tcp", node.Addr)

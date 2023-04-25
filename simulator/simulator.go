@@ -1,4 +1,4 @@
-package gonet
+package simulator
 
 import "fmt"
 
@@ -10,13 +10,13 @@ type SimNode struct {
 	pipes map[string]chan Message
 }
 
-func NewSimulator(me string, addrs []string) *SimNode {
+func New(addrs []string) *SimNode {
 	sim := &SimNode{
 		pipes: make(map[string]chan Message),
 	}
 
 	for _, addr := range addrs {
-		sim.pipes[addr] = make(chan Message)
+		sim.pipes[addr] = make(chan Message, 4096)
 	}
 
 	return sim
